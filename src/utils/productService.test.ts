@@ -1,5 +1,5 @@
 // src/utils/productService.test.ts
-import { describe, expect, test, beforeEach } from "vitest";
+import { describe, expect, test, beforeEach, vi } from "vitest";
 import {
   getProducts,
   createProduct,
@@ -8,6 +8,47 @@ import {
   type Product,
   type CartItem,
 } from "./productService";
+
+// Variable para simular productos en memoria
+let mockProducts: any[] = [
+  { id: 1, nombre: "Producto 1", precio: 10000, stock: 10, categoria: "Test", imagen: "/test.jpg" },
+  { id: 2, nombre: "Producto 2", precio: 20000, stock: 5, categoria: "Test", imagen: "/test.jpg" },
+];
+
+// Mock de productsApi
+vi.mock("../services/api", () => ({
+  productsApi: {
+    getAll: vi.fn(() => Promise.resolve([...mockProducts])),
+    getById: vi.fn((id: number) => {
+      const product = mockProducts.find((p) => p.id === id);
+      return product ? Promise.resolve(product) : Promise.reject(new Error("Not found"));
+    }),
+    create: vi.fn((data) => {
+      const newProduct = {
+        id: Date.now(),
+        ...data,
+      };
+      mockProducts.push(newProduct);
+      return Promise.resolve(newProduct);
+    }),
+    update: vi.fn((id, data) => {
+      const index = mockProducts.findIndex((p) => p.id === id);
+      if (index !== -1) {
+        mockProducts[index] = { ...mockProducts[index], ...data };
+        return Promise.resolve(mockProducts[index]);
+      }
+      return Promise.reject(new Error("Not found"));
+    }),
+    delete: vi.fn((id) => {
+      const index = mockProducts.findIndex((p) => p.id === id);
+      if (index !== -1) {
+        mockProducts.splice(index, 1);
+        return Promise.resolve();
+      }
+      return Promise.reject(new Error("Not found"));
+    }),
+  },
+}));
 
 // Mock simple de localStorage
 const localStorageMock = (() => {
@@ -23,21 +64,31 @@ Object.defineProperty(globalThis, "localStorage", {
   value: localStorageMock,
 });
 
+// Mock de window.dispatchEvent
+globalThis.window = {
+  dispatchEvent: vi.fn(),
+} as any;
+
 describe('ProductService - Pruebas Esenciales', () => {
   beforeEach(() => {
     localStorage.clear();
+    // Reiniciar mockProducts
+    mockProducts = [
+      { id: 1, nombre: "Producto 1", precio: 10000, stock: 10, categoria: "Test", imagen: "/test.jpg" },
+      { id: 2, nombre: "Producto 2", precio: 20000, stock: 5, categoria: "Test", imagen: "/test.jpg" },
+    ];
   });
 
-  test('Debe obtener la lista de productos', () => {
+  test('Debe obtener la lista de productos', async () => {
     //! 1 - Arrange & Act
-    const productos = getProducts();
+    const productos = await getProducts();
 
     //! 2 - Assert
     expect(Array.isArray(productos)).toBe(true);
     expect(productos.length).toBeGreaterThan(0);
   });
 
-  test('Debe crear un nuevo producto con ID único', () => {
+  test('Debe crear un nuevo producto con ID único', async () => {
     //! 1 - Arrange
     const datos: Omit<Product, "id"> = {
       nombre: "PlayStation 5",
@@ -49,7 +100,7 @@ describe('ProductService - Pruebas Esenciales', () => {
     };
 
     //! 2 - Act
-    const producto = createProduct(datos);
+    const producto = await createProduct(datos);
 
     //! 3 - Assert
     expect(producto.id).toBeDefined();
@@ -57,7 +108,7 @@ describe('ProductService - Pruebas Esenciales', () => {
     expect(producto.precio).toBe(599990);
   });
 
-  test('Debe eliminar un producto existente', () => {
+  test('Debe eliminar un producto existente', async () => {
     //! 1 - Arrange
     const datos: Omit<Product, "id"> = {
       nombre: "Xbox Series X",
@@ -67,19 +118,19 @@ describe('ProductService - Pruebas Esenciales', () => {
       stock: 5,
       imagen: "/images/xbox.jpg",
     };
-    const producto = createProduct(datos);
-    const productosAntes = getProducts().length;
+    const producto = await createProduct(datos);
+    const productosAntes = (await getProducts()).length;
 
     //! 2 - Act
-    const resultado = deleteProduct(producto.id);
-    const productosDespues = getProducts().length;
+    const resultado = await deleteProduct(producto.id);
+    const productosDespues = (await getProducts()).length;
 
     //! 3 - Assert
     expect(resultado).toBe(true);
     expect(productosDespues).toBe(productosAntes - 1);
   });
 
-  test('Debe reducir el stock de productos correctamente', () => {
+  test('Debe reducir el stock de productos correctamente', async () => {
     //! 1 - Arrange
     const datos: Omit<Product, "id"> = {
       nombre: "Mouse Gamer",
@@ -89,13 +140,13 @@ describe('ProductService - Pruebas Esenciales', () => {
       stock: 10,
       imagen: "/images/mouse.jpg",
     };
-    const producto = createProduct(datos);
+    const producto = await createProduct(datos);
     const items: CartItem[] = [{ id: producto.id, cantidad: 3 }];
 
     //! 2 - Act
-    const resultado = decrementStock(items);
-    const productos = getProducts();
-    const actualizado = productos.find((p) => p.id === producto.id);
+    const resultado = await decrementStock(items);
+    const productos = await getProducts();
+    const actualizado = productos.find((p: Product) => p.id === producto.id);
 
     //! 3 - Assert
     expect(resultado.success).toBe(true);

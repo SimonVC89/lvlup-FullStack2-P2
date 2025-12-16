@@ -1,3 +1,6 @@
 node_modules/
 dist/
 .env
+.claude/
+FLUJO-COMPRA.md
+PRESENTACION-15MIN.md
