@@ -1,6 +1,11 @@
-# Vite + React (Minimal)
+Proyecxto creado en Visual Studio Code para pagina web Ecomerce de articulos elecrónicos.
 
-Proyecto mínimo creado con Vite y React (TypeScript).
+Este proyecto cuenta con su Backend; para descargar, dirigirse a : https://github.com/SimonVC89/lvlup-backend  
+Descargar, abrir con Intellij y correr (run) TiendaApplication, antes de seguir con las instrucciones de éste repositorio.  
+
+# Vite + React 
+
+Proyecto creado con Vite y React (TypeScript).
 
 Scripts:
 
