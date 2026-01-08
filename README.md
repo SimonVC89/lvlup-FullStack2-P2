@@ -3,6 +3,12 @@ Proyecxto creado en Visual Studio Code para pagina web Ecomerce de articulos ele
 Este proyecto cuenta con su Backend; para descargar, dirigirse a : https://github.com/SimonVC89/lvlup-backend  
 Descargar, abrir con Intellij y correr (run) TiendaApplication, antes de seguir con las instrucciones de éste repositorio.  
 
+**Para loguear como client: sim.villar@duocuc.cl
+                            pass:Pass1234
+
+                como admin: admin@duocuc.cl
+                            pass:admin123
+
 # Vite + React 
 
 Proyecto creado con Vite y React (TypeScript).
